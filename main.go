@@ -3,9 +3,8 @@ package main
 import (
 	"log"
 	"time"
-
 	"github.com/sbstjn/hanu"
-	"github.com/sbstjn/hanu-example/cmd"
+	"mau/cmd"
 	"github.com/spf13/viper"
 )
 
@@ -17,12 +16,16 @@ var (
 )
 
 func init() {
-	viper.SetConfigName(".hanu-example")
-	viper.AddConfigPath("$HOME")
+	viper.SetConfigName(".mau")
+	viper.AddConfigPath("/home/ariel/")
 	viper.AutomaticEnv()
-	viper.ReadInConfig()
+	err := viper.ReadInConfig()
 
-	SlackToken = viper.GetString("HANU_EXAMPLE_SLACK_TOKEN")
+         if err != nil {
+              log.Fatal("Could not load config file")
+          }
+
+	SlackToken = viper.GetString("MAU_SLACK_TOKEN")
 }
 
 func main() {

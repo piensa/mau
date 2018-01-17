@@ -7,7 +7,7 @@ func init() {
 		"version",
 		"Reply with the current chatbot version",
 		func(conv hanu.ConversationInterface) {
-			conv.Reply("Thanks for asking! I'm running with `%s`", Version)
+			conv.Reply("I'm running with `%s`", Version)
 		},
 	)
 }

@@ -11,7 +11,7 @@ func init() {
 		"uptime",
 		"Reply with the uptime",
 		func(conv hanu.ConversationInterface) {
-			conv.Reply("Thanks for asking! I'm running since `%s`", time.Since(Start))
+			conv.Reply("I'm running since `%s`", time.Since(Start))
 		},
 	)
 }

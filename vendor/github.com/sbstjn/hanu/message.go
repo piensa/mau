@@ -102,7 +102,7 @@ func (m Message) IsDirectMessage() bool {
 
 // IsMentionFor checks if the given user was mentioned with the message
 func (m Message) IsMentionFor(user string) bool {
-	return strings.HasPrefix(m.Message, "<@"+user+">")
+        return m.Channel == "G8U1WP4BD"
 }
 
 // IsRelevantFor checks if the message is relevant for a user
