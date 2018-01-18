@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 	"github.com/sbstjn/hanu"
-	"mau/cmd"
+	"github.com/piensa/mau/cmd"
 	"github.com/spf13/viper"
 )
 
@@ -16,8 +16,8 @@ var (
 )
 
 func init() {
-	viper.SetConfigName(".mau")
-	viper.AddConfigPath("/home/ariel/")
+	viper.SetConfigName("config")
+	viper.AddConfigPath("/go/src/github.com/piensa/mau")
 	viper.AutomaticEnv()
 	err := viper.ReadInConfig()
 
