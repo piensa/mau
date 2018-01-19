@@ -5,11 +5,11 @@ import "github.com/sbstjn/hanu"
 func init() {
 	Register(
 		"deploy <branch:string>",
-		"Deploy a git branch or commit.",
+		"Deploy a git branch or commit to development server.",
 		func(conv hanu.ConversationInterface) {
 			branch, _ := conv.Match(0)
-                        url := "https://blablah.geosure.tech"
-			conv.Reply("Deployed " + branch + " at the following url " + url)
+			url := "https://blablah.api.geosure.tech"
+			conv.Reply("Deployed `" + branch + "` at the following url " + url)
 		},
 	)
 }
