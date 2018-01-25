@@ -1,0 +1,1 @@
+worker: hanu-example
