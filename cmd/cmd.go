@@ -14,6 +14,8 @@ var Version string
 // Start contains the Time when the process started
 var Start time.Time
 
+var config_Prometheus string 
+
 // Register adds a new command to commandList
 func Register(cmd string, description string, handler hanu.Handler) {
 	commandList = append(commandList, hanu.NewCommand(cmd, description, handler))
