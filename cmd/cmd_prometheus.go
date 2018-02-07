@@ -16,15 +16,16 @@ import (
 
 
 func init() {
-	config_Prometheus := "/Users/waybarrios/Documents/code/prometheus/"
+	config_Prometheus := "/home/prometheus/data/"
 	Register(
 		"prometheus <hash:string>",
 		"Set up config file in Prometheus  to ge the metrics",
 		func(conv hanu.ConversationInterface) {
 			hash, _ := conv.Match(0)
-			conv.Reply("Hash  is `%s`", hash)
 			msg:=SetupPrometheus(hash, config_Prometheus)
-			conv.Reply("%s",msg)
+			if msg != "" {
+			   conv.Reply("%s",msg)
+			}
 		},
 	)
 }
@@ -58,19 +59,15 @@ func SetupPrometheus (hash string, config_path string) string {
 	}
 	slice := []string{hash,".api.geosure.tech"}
 	endpoint :=strings.Join(slice, "")
-	
 	s := []string{config_path,"config.yml"};
 	yamlFile, err := ioutil.ReadFile(strings.Join(s, ""))
     if err != nil {
         log.Fatal("yamlFile.Get err   #%v ", err)
-        
     }
     string_yaml := string(yamlFile)
     j2, err := yaml.YAMLToJSON([]byte(string_yaml))
-    fmt.Println(string(j2))
     if err != nil {
     	log.Fatal("Yaml parsing error...")
-    	
     }
     var objmap map[string]interface{} 
 	err = json.Unmarshal(j2, &objmap)
@@ -78,7 +75,6 @@ func SetupPrometheus (hash string, config_path string) string {
 		log.Fatal("Json parsing error...")
 
 	}
-	
 	scrape_configs := objmap["scrape_configs"].([]interface{})
 	scrape := scrape_configs[0].(map[string]interface{})
 	static_conf := scrape["static_configs"].([]interface{})
@@ -101,35 +97,34 @@ func SetupPrometheus (hash string, config_path string) string {
 	save:= saveYML(config_path,objmap)
 	if save == true {
 		ReloadPrometheus()
-		fmt.Sprintf("The endpoint `%s` has updated. :smile:", endpoint)
+		return fmt.Sprintf("The endpoint `%s` has updated. :smile:", endpoint)
 	}
+	return ""
 
 }
 
 func saveYML (folder_path string, objmap map[string]interface{}) bool {
 	json, err := json.Marshal(objmap)
-	if err != nil { 
-		fmt.Println("err: %v\n", err)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
 		return false
 		}
-	fmt.Println(folder_path)
 	yml, err := yaml.JSONToYAML(json)
-	if err != nil { 
-		fmt.Println("err: %v\n", err)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
 		return false
 		}
 	string_yml := strings.Replace(string(yml), "null", "", -1)
-	fmt.Println(string_yml)
 	filepath := []string{folder_path,"config2.yml"}
 	fo, err := os.Create(strings.Join(filepath, ""))
-	if err != nil { 
-		fmt.Println("err: %v\n", err) 
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
 		return false
 		}
 	_, err = io.Copy(fo, strings.NewReader(string_yml))
 	if err != nil {
-		fmt.Println("err: %v\n", err) 
-		return false 
+		fmt.Printf("err: %v\n", err)
+		return false
 		}
 	return true
 
