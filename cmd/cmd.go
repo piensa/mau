@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"time"
-
 	"github.com/sbstjn/hanu"
 )
 
@@ -13,6 +12,9 @@ var Version string
 
 // Start contains the Time when the process started
 var Start time.Time
+
+// String contains prometheus config path 
+var config_Prometheus string 
 
 // Register adds a new command to commandList
 func Register(cmd string, description string, handler hanu.Handler) {
