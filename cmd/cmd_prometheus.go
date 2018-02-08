@@ -19,7 +19,7 @@ func init() {
 	config_Prometheus := "/home/prometheus/data/"
 	Register(
 		"prometheus <hash:string>",
-		"Set up config file in Prometheus  to ge the metrics",
+		"Set up config file in Prometheus to get the metrics",
 		func(conv hanu.ConversationInterface) {
 			hash, _ := conv.Match(0)
 			msg:=SetupPrometheus(hash, config_Prometheus)
@@ -31,7 +31,7 @@ func init() {
 }
 
 func ReloadPrometheus() {
-	pid, err := exec.Command("pgrep","prometheus").Output()
+    pid, err := exec.Command("pgrep","prometheus").Output()
     if err != nil {
         log.Fatal(err)
     }
@@ -52,10 +52,10 @@ func SetupPrometheus (hash string, config_path string) string {
 
 	var IsLetter = regexp.MustCompile(`^[a-zA-Z]+$`).MatchString
 	if IsLetter(hash) == false {
-		return "Hash must only contain letters"
+		return "Hash must only contain letters. :worried:"
 	}
 	if len(hash) != 10 {
-		return "Invalid hash lenght. It must be lenght 10."
+		return "Invalid hash lenght. It must be lenght 10. :worried:"
 	}
 	slice := []string{hash,".api.geosure.tech"}
 	endpoint :=strings.Join(slice, "")
@@ -82,7 +82,7 @@ func SetupPrometheus (hash string, config_path string) string {
 	targets := static["targets"].([]interface{})
 	is_value := isValueInList(endpoint,targets)
 	if is_value == true {
-		return fmt.Sprintf("The endpoint `%s` has already been configured in Prometheus. Not need to update it.", endpoint)
+		return fmt.Sprintf("The endpoint `%s` has already been configured in Prometheus. Not need to update it. :v:", endpoint)
 	}
 
 	// adding new endpoint
@@ -99,6 +99,7 @@ func SetupPrometheus (hash string, config_path string) string {
 		ReloadPrometheus()
 		return fmt.Sprintf("The endpoint `%s` has updated. :smile:", endpoint)
 	}
+	fmt.Println("save: ",save)
 	return ""
 
 }
@@ -115,7 +116,7 @@ func saveYML (folder_path string, objmap map[string]interface{}) bool {
 		return false
 		}
 	string_yml := strings.Replace(string(yml), "null", "", -1)
-	filepath := []string{folder_path,"config2.yml"}
+	filepath := []string{folder_path,"config.yml"}
 	fo, err := os.Create(strings.Join(filepath, ""))
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
