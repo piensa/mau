@@ -32,7 +32,7 @@ func init() {
 }
 
 func GitClone(test_path string) error {
-	_, err := exec.Command("git","clone","https://github.com/geosure/geosure.git",test_path).Output()
+	_, err := exec.Command("git","clone","git@github.com:geosure/geosure.git",test_path).Output()
    	if err != nil {
     		return err
     	}
