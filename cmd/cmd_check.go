@@ -6,6 +6,7 @@ import(
     "strings"
     "fmt"
     "net/http"
+    "bytes"
 ) 
 
 func init() {
@@ -14,21 +15,19 @@ func init() {
 		"Do the unitests and coverage from a given Pull Request",
 		func(conv hanu.ConversationInterface) {
 			test_path = "/home/prometheus/test"
+			GitToken = "e72c892d7c31894c93406caccec32393391662e5"
 			pull_request, _ := conv.Match(0)
 			fmt.Println(pull_request)
 			coverage,time,pass, msg_err := CheckPR(pull_request,test_path)
 			if msg_err != "" {
 				conv.Reply(msg_err)
 			} else {
-				template_msg :=` 
-				test:coverage=%s
-				test:passed=%t
-				test:time=%s seconds"}`
+				template_msg :="test:coverage=%s\\ntest:passed=%t\\ntest:time=%s seconds\\n"
 				msg:= fmt.Sprintf(template_msg,coverage,pass,time)
-				conv.Reply(msg)
-				git_error:= GitComment(PR,msg)
+				conv.Reply(strings.Replace(msg,"\\n","\n",-1))
+				git_error:= GitComment(pull_request,msg)
 				if git_error != nil {
-				 	string_error := "Error GitComment: "+ fmt.Sprint(err_rm)
+				 	string_error := "Error GitComment: "+ fmt.Sprint(git_error)
 					conv.Reply(string_error)
 					fmt.Println(string_error)
 
@@ -93,10 +92,12 @@ func DeleteFolder (test_path string) error {
 
 func GitComment (PR string, msg string) error {
 
-	raw := fmt.Sprintf(`{"body": %s}`,msg)
-	url := "https://api.github.com/repos/geosure/geosure/pull/%s/comments?access_token=%s"
+	raw := fmt.Sprintf(`{"body": "%s"}`,msg)
+	url := "https://api.github.com/repos/geosure/geosure/issues/%s/comments?access_token=%s"
 	githuburl:=fmt.Sprintf(url,PR,GitToken)
-	_ , err := http.Post(githuburl, "application/json", bytes.NewBuffer(raw))
+	fmt.Println(raw)
+	re , err := http.Post(githuburl, "application/json", bytes.NewBuffer([]byte(raw)))
+	fmt.Println(re)
 	if err != nil {
 		return err
 	}
@@ -104,6 +105,12 @@ func GitComment (PR string, msg string) error {
 
 }
 func CheckPR (PR string, test_path string) (string,string,bool,string) {
+	err_rm := DeleteFolder(test_path)
+	if err_rm != nil {
+		msg := "Error DeleteFolder: "+ fmt.Sprint(err_rm)
+		fmt.Println(msg)
+		return "","",false,msg 
+	}
 	err_clone := GitClone(test_path)
 	if err_clone != nil {
 		msg := "Error GitClone: "+ fmt.Sprint(err_clone)
@@ -119,12 +126,6 @@ func CheckPR (PR string, test_path string) (string,string,bool,string) {
 	coverage, time , pass, err_make := MakeTest(test_path)
 	if err_make != nil {
 		msg := "Error MakeTest: "+ fmt.Sprint(err_make)
-		fmt.Println(msg)
-		return "","",false,msg 
-	}
-	err_rm := DeleteFolder(test_path)
-	if err_rm != nil {
-		msg := "Error DeleteFolder: "+ fmt.Sprint(err_rm)
 		fmt.Println(msg)
 		return "","",false,msg 
 	}
