@@ -7,6 +7,9 @@ import(
     "fmt"
     "net/http"
     "bytes"
+    "encoding/json"
+    "io/ioutil"
+	"log"
 ) 
 
 func init() {
@@ -14,8 +17,14 @@ func init() {
 		"check <PR:string>",
 		"Do the unitests and coverage from a given Pull Request",
 		func(conv hanu.ConversationInterface) {
+			ConfigFile, err := ioutil.ReadFile("./config.json")
+			if err != nil {
+							log.Fatal(err)
+			}
 			test_path = "/home/prometheus/test"
-			GitToken = "e72c892d7c31894c93406caccec32393391662e5"
+			var config ConfigStruct
+			json.Unmarshal(ConfigFile, &config)
+			GitToken := config.GithubToken
 			pull_request, _ := conv.Match(0)
 			fmt.Println(pull_request)
 			coverage,time,pass, msg_err := CheckPR(pull_request,test_path)
@@ -132,3 +141,6 @@ func CheckPR (PR string, test_path string) (string,string,bool,string) {
 	return coverage,time,pass, ""
 }
 
+type ConfigStruct struct {
+	GithubToken	string	`json:"GITHUB_ACCESS_TOKEN"`
+}
