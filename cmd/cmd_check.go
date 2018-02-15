@@ -5,6 +5,7 @@ import(
     "os/exec"
     "strings"
     "fmt"
+    "net/http"
 ) 
 
 func init() {
@@ -22,10 +23,16 @@ func init() {
 				template_msg :=` 
 				test:coverage=%s
 				test:passed=%t
-				test:time=%s seconds`
+				test:time=%s seconds"}`
 				msg:= fmt.Sprintf(template_msg,coverage,pass,time)
 				conv.Reply(msg)
+				git_error:= GitComment(PR,msg)
+				if git_error != nil {
+				 	string_error := "Error GitComment: "+ fmt.Sprint(err_rm)
+					conv.Reply(string_error)
+					fmt.Println(string_error)
 
+				}
 			}
 		},
 	)
@@ -84,6 +91,18 @@ func DeleteFolder (test_path string) error {
 	return nil 
 }
 
+func GitComment (PR string, msg string) error {
+
+	raw := fmt.Sprintf(`{"body": %s}`,msg)
+	url := "https://api.github.com/repos/geosure/geosure/pull/%s/comments?access_token=%s"
+	githuburl:=fmt.Sprintf(url,PR,GitToken)
+	_ , err := http.Post(githuburl, "application/json", bytes.NewBuffer(raw))
+	if err != nil {
+		return err
+	}
+	return nil 
+
+}
 func CheckPR (PR string, test_path string) (string,string,bool,string) {
 	err_clone := GitClone(test_path)
 	if err_clone != nil {

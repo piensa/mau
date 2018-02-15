@@ -19,6 +19,10 @@ var config_Prometheus string
 // String contains test folder for PR test
 var test_path string 
 
+// String access token 
+var GitToken string 
+GitToken = "998bcfb5d565dd23bd04276093e3f6b71c06bf5d"
+
 // Register adds a new command to commandList
 func Register(cmd string, description string, handler hanu.Handler) {
 	commandList = append(commandList, hanu.NewCommand(cmd, description, handler))
