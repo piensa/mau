@@ -71,23 +71,24 @@ func MakeTest (test_path string) (string, string,bool,error) {
 	split_folder:= "_"+test_path
 	cmd_test := exec.Command("make","test")
 	cmd_test.Dir = test_path
-    	test, err := cmd_test.Output()
-    	pass := true 
-    	if err != nil {
-        //fmt.Println("error make test: "+ fmt.Sprint(err))
-        	return coverage, time,true,err
-    	}
+    test, _ := cmd_test.Output()
+    pass := true 
    	string_test := string(test)
-    	if strings.Index(string_test,"FAIL") > 0 {
+   	if strings.Index(string_test,"[build failed]") > 0 {
     		pass = false
-    	}
-    	split_coverage := strings.Split(string_test, "coverage: ")
-    	split_percent := strings.Split(split_coverage[1],"%")
-    	split_dir := strings.Split (split_percent[1],split_folder)
-    	split_s:= strings.Split(split_dir[1],"s")
-    	coverage = split_percent[0]
-    	time = strings.TrimSpace(split_s[0])
-    	return coverage, time, pass,nil 
+    		error_build:= errors.New("Golang Error: Build failed. Check your code!")
+    		return coverage,time,pass,error_build
+    }
+    if strings.Index(string_test,"FAIL") > 0 {
+    		pass = false
+    }	
+    split_coverage := strings.Split(string_test, "coverage: ")
+    split_percent := strings.Split(split_coverage[1],"%")
+    split_dir := strings.Split (split_percent[1],split_folder)
+    split_s:= strings.Split(split_dir[1],"s")
+    coverage = split_percent[0]
+    time = strings.TrimSpace(split_s[0])
+    return coverage, time, pass,nil 
 }
 
 func DeleteFolder (test_path string) error {
@@ -122,19 +123,19 @@ func CheckPR (PR string, test_path string) (string,string,bool,string) {
 	}
 	err_clone := GitClone(test_path)
 	if err_clone != nil {
-		msg := "Error GitClone: "+ fmt.Sprint(err_clone)
+		msg := "Error GitClone: "+ fmt.Sprint(err_clone)+":no_entry_sign:"
 		fmt.Println(msg)
 		return "","",false,msg 
 	}
 	err_checkout := GitCheckout(PR, test_path)
 	if err_checkout != nil {
-		msg := "Error GitCheckout: "+ fmt.Sprint(err_checkout)
+		msg := "Error GitCheckout: "+ fmt.Sprint(err_checkout)+":no_entry_sign:"
 		fmt.Println(msg)
 		return "","",false,msg 
 	}
 	coverage, time , pass, err_make := MakeTest(test_path)
 	if err_make != nil {
-		msg := "Error MakeTest: "+ fmt.Sprint(err_make)
+		msg := "Error MakeTest: "+ fmt.Sprint(err_make)+":no_entry_sign:"
 		fmt.Println(msg)
 		return "","",false,msg 
 	}
