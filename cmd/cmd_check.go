@@ -9,7 +9,8 @@ import(
     "bytes"
     "encoding/json"
     "io/ioutil"
-	"log"
+    "log"
+    "errors"
 ) 
 
 func init() {
@@ -19,14 +20,13 @@ func init() {
 		func(conv hanu.ConversationInterface) {
 			ConfigFile, err := ioutil.ReadFile("./config.json")
 			if err != nil {
-							log.Fatal(err)
+			      log.Fatal(err)
 			}
 			test_path = "/home/prometheus/test"
 			var config ConfigStruct
 			json.Unmarshal(ConfigFile, &config)
-			GitToken := config.GithubToken
+			GitToken = config.GithubToken
 			pull_request, _ := conv.Match(0)
-			fmt.Println(pull_request)
 			coverage,time,pass, msg_err := CheckPR(pull_request,test_path)
 			if msg_err != "" {
 				conv.Reply(msg_err)
@@ -105,9 +105,7 @@ func GitComment (PR string, msg string) error {
 	raw := fmt.Sprintf(`{"body": "%s"}`,msg)
 	url := "https://api.github.com/repos/geosure/geosure/issues/%s/comments?access_token=%s"
 	githuburl:=fmt.Sprintf(url,PR,GitToken)
-	fmt.Println(raw)
-	re , err := http.Post(githuburl, "application/json", bytes.NewBuffer([]byte(raw)))
-	fmt.Println(re)
+	_ , err := http.Post(githuburl, "application/json", bytes.NewBuffer([]byte(raw)))
 	if err != nil {
 		return err
 	}
@@ -140,8 +138,4 @@ func CheckPR (PR string, test_path string) (string,string,bool,string) {
 		return "","",false,msg 
 	}
 	return coverage,time,pass, ""
-}
-
-type ConfigStruct struct {
-	GithubToken	string	`json:"GITHUB_ACCESS_TOKEN"`
 }
