@@ -66,15 +66,15 @@ func GitCheckout(pull string, test_path string ) error {
 }
 
 func MakeTest (test_path string) (string, string,bool,error) {
-	coverage := ""
-	time:= ""
-	split_folder:= "_"+test_path
-	cmd_test := exec.Command("make","test")
-	cmd_test.Dir = test_path
+    coverage := ""
+    time:= ""
+    split_folder:= "_"+test_path
+    cmd_test := exec.Command("make","test")
+    cmd_test.Dir = test_path
     test, _ := cmd_test.Output()
     pass := true 
-   	string_test := string(test)
-   	if strings.Index(string_test,"[build failed]") > 0 {
+    string_test := string(test)
+    if strings.Index(string_test,"coverage:") < 0 && strings.Index(string_test,"failed") > 0 {
     		pass = false
     		error_build:= errors.New("Golang Error: Build failed. Check your code!")
     		return coverage,time,pass,error_build
