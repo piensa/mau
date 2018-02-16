@@ -31,8 +31,24 @@ func init() {
 			if msg_err != "" {
 				conv.Reply(msg_err)
 			} else {
-				template_msg :="test:coverage=%s\\ntest:passed=%t\\ntest:time=%s seconds\\n"
-				msg:= fmt.Sprintf(template_msg,coverage,pass,time)
+                url := "none"
+                if pass == true {
+                    err_deploy:= NowDeploy(test_path)
+                    if err_deploy != nil {
+                        msg_deploy := "Error Now Deploy: "+ fmt.Sprint(err_deploy)+":no_entry_sign:"
+                        fmt.Println(msg_deploy)
+                        conv.Reply(msg_deploy) 
+                    }
+                    url,err_sub:=GetSubdomain()
+                    if err_sub !=nil {
+                        msg_sub := "Error Getting Subdomain: "+ fmt.Sprint(err_sub)+":no_entry_sign:"
+                        fmt.Println(msg_sub)
+                        conv.Reply(msg_sub) 
+                    }
+
+                } 
+				template_msg :="deployment:url=%s\\ntest:coverage=%s\\ntest:passed=%t\\ntest:time=%s seconds\\n"
+				msg:= fmt.Sprintf(template_msg,url,coverage,pass,time)
 				conv.Reply(strings.Replace(msg,"\\n","\n",-1))
 				git_error:= GitComment(pull_request,msg)
 				if git_error != nil {
@@ -138,4 +154,28 @@ func CheckPR (PR string, test_path string) (string,string,bool,string) {
 		return "","",false,msg 
 	}
 	return coverage,time,pass, ""
+}
+
+func NowDeploy(test_path string) {
+    cmd_deploy := exec.Command("make","deploy")
+    cmd_deploy.Dir = test_path
+    _, err := cmd_test.Output()
+    if err != nil {
+        return err
+    }º1
+    return nil 
+}
+
+func GetSubdomain() (string,error){
+    results, err:= exec.Command("now","ls","geosure").Output()
+    if err != nil {
+                return "",err
+        }
+    string_instances := string(results)
+    instances:= strings.Split(string_instances,"geosure-")
+    first_row := instances[1]
+    parsing_row := strings.Split(first_row,".now.sh")
+    hash := parsing_row[0]
+    url:= fmt.Sprintf("https://geosure-%s.now.sh",hash)
+    return url, nil 
 }
