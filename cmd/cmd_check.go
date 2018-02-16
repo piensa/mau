@@ -32,9 +32,17 @@ func init() {
             coverage,time,pass, msg_err := CheckPR(pull_request,test_path)
             if msg_err != "" {
                 conv.Reply(msg_err)
+                err_co:= GitComment(pull_request,msg_err)
+                if err_co != nil {
+                    msg_co := "Error GitComment: "+ fmt.Sprint(err_co)
+                    conv.Reply(msg_co)
+                    fmt.Println(msg_co)
+                }
+
             } else {
                 url = "none"
                 if pass == true {
+                    conv.Reply("Your request is progress... :stopwatch:")
                     err_deploy:= NowDeploy(test_path)
                     if err_deploy != nil {
                         msg_deploy := "Error Now Deploy: "+ fmt.Sprint(err_deploy)+":no_entry_sign:"
@@ -47,8 +55,6 @@ func init() {
                         fmt.Println(msg_sub)
                         conv.Reply(msg_sub) 
                     }
-
-
                 } 
                 template_msg :="deployment:url=%s\\ntest:coverage=%s\\ntest:passed=%t\\ntest:time=%s seconds\\n"
                 msg:= fmt.Sprintf(template_msg,url,coverage,pass,time)
@@ -140,13 +146,13 @@ func CheckPR (PR string, test_path string) (string,string,bool,string) {
     }
     err_checkout := GitCheckout(PR, test_path)
     if err_checkout != nil {
-        msg := "Error GitCheckout: "+ fmt.Sprint(err_checkout)+":no_entry_sign:"
+        msg := "Invalid Pull Request Number :no_entry_sign:"
         fmt.Println(msg)
         return "","",false,msg 
     }
     coverage, time , pass, err_make := MakeTest(test_path)
     if err_make != nil {
-        msg := "Error MakeTest: "+ fmt.Sprint(err_make)+":no_entry_sign:"
+        msg := "Unitest Error: "+ fmt.Sprint(err_make)+":no_entry_sign:"
         fmt.Println(msg)
         return "","",false,msg 
     }
