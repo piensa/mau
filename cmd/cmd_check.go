@@ -14,24 +14,26 @@ import(
 ) 
 
 func init() {
-	Register(
-		"check <PR:string>",
-		"Do the unitests and coverage from a given Pull Request",
-		func(conv hanu.ConversationInterface) {
-			ConfigFile, err := ioutil.ReadFile("./config.json")
-			if err != nil {
-			      log.Fatal(err)
-			}
-			test_path = "/home/prometheus/test"
-			var config ConfigStruct
-			json.Unmarshal(ConfigFile, &config)
-			GitToken = config.GithubToken
-			pull_request, _ := conv.Match(0)
-			coverage,time,pass, msg_err := CheckPR(pull_request,test_path)
-			if msg_err != "" {
-				conv.Reply(msg_err)
-			} else {
-                url := "none"
+    Register(
+        "check <PR:string>",
+        "Do the unitests and coverage from a given Pull Request",
+        func(conv hanu.ConversationInterface) {
+            ConfigFile, err := ioutil.ReadFile("./config.json")
+            if err != nil {
+                 log.Fatal(err)
+            }
+            test_path = "/home/prometheus/test"
+            var config ConfigStruct
+            var url string
+            var err_sub error 
+            json.Unmarshal(ConfigFile, &config)
+            GitToken = config.GithubToken
+            pull_request, _ := conv.Match(0)
+            coverage,time,pass, msg_err := CheckPR(pull_request,test_path)
+            if msg_err != "" {
+                conv.Reply(msg_err)
+            } else {
+                url = "none"
                 if pass == true {
                     err_deploy:= NowDeploy(test_path)
                     if err_deploy != nil {
@@ -39,43 +41,42 @@ func init() {
                         fmt.Println(msg_deploy)
                         conv.Reply(msg_deploy) 
                     }
-                    url,err_sub:=GetSubdomain()
+                    url,err_sub = GetSubdomain()
                     if err_sub !=nil {
                         msg_sub := "Error Getting Subdomain: "+ fmt.Sprint(err_sub)+":no_entry_sign:"
                         fmt.Println(msg_sub)
                         conv.Reply(msg_sub) 
                     }
 
-                } 
-				template_msg :="deployment:url=%s\\ntest:coverage=%s\\ntest:passed=%t\\ntest:time=%s seconds\\n"
-				msg:= fmt.Sprintf(template_msg,url,coverage,pass,time)
-				conv.Reply(strings.Replace(msg,"\\n","\n",-1))
-				git_error:= GitComment(pull_request,msg)
-				if git_error != nil {
-				 	string_error := "Error GitComment: "+ fmt.Sprint(git_error)
-					conv.Reply(string_error)
-					fmt.Println(string_error)
 
-				}
-			}
-		},
-	)
+                } 
+                template_msg :="deployment:url=%s\\ntest:coverage=%s\\ntest:passed=%t\\ntest:time=%s seconds\\n"
+                msg:= fmt.Sprintf(template_msg,url,coverage,pass,time)
+                conv.Reply(strings.Replace(msg,"\\n","\n",-1))
+                git_error:= GitComment(pull_request,msg)
+                if git_error != nil {
+                    string_error := "Error GitComment: "+ fmt.Sprint(git_error)
+                    conv.Reply(string_error)
+                    fmt.Println(string_error)
+                }
+            }
+        },
+    )
 }
 
 func GitClone(test_path string) error {
-	_, err := exec.Command("git","clone","git@github.com:geosure/geosure.git",test_path).Output()
-   	if err != nil {
-    		return err
-    	}
-    	return nil 
-	}
+    _, err := exec.Command("git","clone","git@github.com:geosure/geosure.git",test_path).Output()
+    if err != nil {
+        return err
+    }
+        return nil 
+    }
 
 func GitCheckout(pull string, test_path string ) error {
-	cmd := exec.Command("hub","pr","checkout",pull)
-	cmd.Dir = test_path
-	_, err := cmd.Output()
-	if err != nil {
-         //fmt.Println("error checkout: "+ fmt.Sprint(err))
+    cmd := exec.Command("hub","pr","checkout",pull)
+    cmd.Dir = test_path
+    _, err := cmd.Output()
+    if err != nil {
          return err
         }
     return nil 
@@ -91,13 +92,13 @@ func MakeTest (test_path string) (string, string,bool,error) {
     pass := true 
     string_test := string(test)
     if strings.Index(string_test,"coverage:") < 0 && strings.Index(string_test,"failed") > 0 {
-    		pass = false
-    		error_build:= errors.New("Golang Error: Build failed. Check your code!")
-    		return coverage,time,pass,error_build
+        pass = false
+        error_build:= errors.New("Golang Error: Build failed. Check your code!")
+        return coverage,time,pass,error_build
     }
     if strings.Index(string_test,"FAIL") > 0 {
-    		pass = false
-    }	
+        pass = false
+    }
     split_coverage := strings.Split(string_test, "coverage: ")
     split_percent := strings.Split(split_coverage[1],"%")
     split_dir := strings.Split (split_percent[1],split_folder)
@@ -108,61 +109,57 @@ func MakeTest (test_path string) (string, string,bool,error) {
 }
 
 func DeleteFolder (test_path string) error {
-	cmd_rm := exec.Command("rm","-rf",test_path)
-	_, err := cmd_rm.Output()
-	if err != nil {
-		return err
-	}
-	return nil 
+    cmd_rm := exec.Command("rm","-rf",test_path)
+    _, err := cmd_rm.Output()
+    if err != nil {
+        return err
+    }
+    return nil 
 }
 
 func GitComment (PR string, msg string) error {
-
-	raw := fmt.Sprintf(`{"body": "%s"}`,msg)
-	url := "https://api.github.com/repos/geosure/geosure/issues/%s/comments?access_token=%s"
-	githuburl:=fmt.Sprintf(url,PR,GitToken)
-	_ , err := http.Post(githuburl, "application/json", bytes.NewBuffer([]byte(raw)))
-	if err != nil {
-		return err
-	}
-	return nil 
-
+    raw := fmt.Sprintf(`{"body": "%s"}`,msg)
+    url := "https://api.github.com/repos/geosure/geosure/issues/%s/comments?access_token=%s"
+    githuburl:=fmt.Sprintf(url,PR,GitToken)
+    _ , err := http.Post(githuburl, "application/json", bytes.NewBuffer([]byte(raw)))
+    if err != nil {return err}
+    return nil 
 }
 func CheckPR (PR string, test_path string) (string,string,bool,string) {
-	err_rm := DeleteFolder(test_path)
-	if err_rm != nil {
-		msg := "Error DeleteFolder: "+ fmt.Sprint(err_rm)
-		fmt.Println(msg)
-		return "","",false,msg 
-	}
-	err_clone := GitClone(test_path)
-	if err_clone != nil {
-		msg := "Error GitClone: "+ fmt.Sprint(err_clone)+":no_entry_sign:"
-		fmt.Println(msg)
-		return "","",false,msg 
-	}
-	err_checkout := GitCheckout(PR, test_path)
-	if err_checkout != nil {
-		msg := "Error GitCheckout: "+ fmt.Sprint(err_checkout)+":no_entry_sign:"
-		fmt.Println(msg)
-		return "","",false,msg 
-	}
-	coverage, time , pass, err_make := MakeTest(test_path)
-	if err_make != nil {
-		msg := "Error MakeTest: "+ fmt.Sprint(err_make)+":no_entry_sign:"
-		fmt.Println(msg)
-		return "","",false,msg 
-	}
-	return coverage,time,pass, ""
+    err_rm := DeleteFolder(test_path)
+    if err_rm != nil {
+        msg := "Error DeleteFolder: "+ fmt.Sprint(err_rm)
+        fmt.Println(msg)
+        return "","",false,msg 
+    }
+    err_clone := GitClone(test_path)
+    if err_clone != nil {
+        msg := "Error GitClone: "+ fmt.Sprint(err_clone)+":no_entry_sign:"
+        fmt.Println(msg)
+        return "","",false,msg 
+    }
+    err_checkout := GitCheckout(PR, test_path)
+    if err_checkout != nil {
+        msg := "Error GitCheckout: "+ fmt.Sprint(err_checkout)+":no_entry_sign:"
+        fmt.Println(msg)
+        return "","",false,msg 
+    }
+    coverage, time , pass, err_make := MakeTest(test_path)
+    if err_make != nil {
+        msg := "Error MakeTest: "+ fmt.Sprint(err_make)+":no_entry_sign:"
+        fmt.Println(msg)
+        return "","",false,msg 
+    }
+    return coverage,time,pass, ""
 }
 
-func NowDeploy(test_path string) {
+func NowDeploy(test_path string) error {
     cmd_deploy := exec.Command("make","deploy")
     cmd_deploy.Dir = test_path
-    _, err := cmd_test.Output()
+    _, err := cmd_deploy.Output()
     if err != nil {
         return err
-    }º1
+    }
     return nil 
 }
 
