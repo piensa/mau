@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"errors"
 )
 
 func init() {
@@ -30,8 +31,14 @@ func init() {
 			if len(pr) > 0 {
 				answer = "Open Pull Requests:\n"
 				for i := 0; i < len(pr); i++ {
-					commentBody := getCommentBody(GithubToken, pr[i].Links.Comments.Href)
-					answer = answer + "`" + pr[i].Head.Ref + "` " + pr[i].Html_url + " \n" + commentBody
+					commentFull := ""
+					commentBody, err := getCommentBody(GithubToken, pr[i].Links.Comments.Href)
+
+					if err == nil {
+						commentFull = ", *deployment url: *" + commentBody.DeploymentUrl
+					}
+
+					answer = answer + "`" + pr[i].Head.Ref + "` " + pr[i].Html_url + commentFull
 				}
 			}
 			conv.Reply(answer)
@@ -73,7 +80,7 @@ type ParsedComment struct {
 	DeploymentUrl	string
 	DeploymentDate	string
 	TestCoverage	string
-	testPassed	string
+	TestPassed	string
 	TestTime	string
 }
 
@@ -93,7 +100,7 @@ func getPrList(GithubToken string) []Prlist {
 	return pr
 }
 
-func getCommentBody(GithubToken string, commentUrl string) string {
+func getCommentBody(GithubToken string, commentUrl string) (ParsedComment, error) {
 	url :=  commentUrl +  "?access_token=" + GithubToken
 
 	resp, err :=  http.Get(url)
@@ -108,18 +115,30 @@ func getCommentBody(GithubToken string, commentUrl string) string {
 	json.Unmarshal(body, &comment)
 
 	commentBody := ""
-
+	fmt.Println(comment)
 	for i := 0; i < len(comment); i++ {
 		if strings.Contains(comment[i].Body, "deployment:url") {
 			commentBody = comment[i].Body
 		}
 	}
-	stringCommentParser(commentBody)
-	return commentBody
-
+	return stringCommentParser(commentBody)
 }
 
-func stringCommentParser(commentBody string) {
+func stringCommentParser(commentBody string) (ParsedComment, error) {
+	var parsedComment ParsedComment
+
+	if commentBody == "" {
+		return parsedComment, errors.New("Empty string")
+	}
+
 	commentArray := strings.Split(commentBody, "\n")
-	fmt.Println(commentArray[0])
+	parsedComment = ParsedComment{
+		DeploymentUrl:	strings.Split(commentArray[0], "=")[1],
+		DeploymentDate:	strings.Split(commentArray[1], "=")[1],
+		TestCoverage:	strings.Split(commentArray[2], "=")[1],
+		TestPassed:	strings.Split(commentArray[3], "=")[1],
+		TestTime:	strings.Split(commentArray[4], "=")[1] }
+
+	//fmt.Println(parsedComment.DeploymentUrl)
+	return parsedComment, nil
 }
