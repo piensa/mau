@@ -18,10 +18,10 @@ func init() {
 		"accept <branch:string>",
 		"Merges open Pull Request for specified branch onto master and redeploys master on the staging server.",
 		func(conv hanu.ConversationInterface) {
-            test_path = "/home/prometheus/test"
+            test_path = "/home/prometheus/geosure"
 			branch, _ := conv.Match(0)
-            msg,stage_url := AcceptPull(branch,test_path)
             conv.Reply("Your request is in progress... Waiting... :stopwatch:")
+            msg,stage_url := AcceptPull(branch,test_path)
             if msg != ""{
                 conv.Reply(msg)
             } else {
@@ -237,7 +237,7 @@ func AcceptPull(branch string, test_path string) (string,string) {
         fmt.Println(msg)
         return msg,""
     }
-    destination_url:= "https://api.geosure.tech/"
+    destination_url:= "api.geosure.tech"
     err_alias := NowAlias(path,api_url,destination_url)
     if err_url !=nil {
         msg = "Error Now Alias: "+ fmt.Sprint(err_alias)+":no_entry_sign:"
