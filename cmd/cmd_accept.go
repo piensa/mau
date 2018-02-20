@@ -21,6 +21,7 @@ func init() {
             test_path = "/home/prometheus/test"
 			branch, _ := conv.Match(0)
             msg,stage_url := AcceptPull(branch,test_path)
+            conv.Reply("Your request is in progress... Waiting... :stopwatch:")
             if msg != ""{
                 conv.Reply(msg)
             } else {
@@ -131,6 +132,22 @@ func NowApi(folder_path string) error {
     return nil 
 }
 
+func GetApiUrl(folder_path string) (string,error) {
+    cmd:= exec.Command("now","ls","api")
+    cmd.Dir = folder_path
+    now_ls, err := cmd.Output()
+    if err != nil {
+         return "",err
+        }
+   string_now := string(now_ls)
+   instances:= strings.Split(string_now,"api-")
+   first_row := instances[1]
+   parsing_row := strings.Split(first_row,".now.sh")
+   hash := parsing_row[0]
+   url:= fmt.Sprintf("https://api-%s.now.sh",hash)
+   return url,nil
+}
+
 func NowAlias (folder_path string, source_url string, destination_url string) error {
     cmd:= exec.Command("now","alias",source_url,destination_url)
     cmd.Dir = folder_path
@@ -214,7 +231,7 @@ func AcceptPull(branch string, test_path string) (string,string) {
         fmt.Println(msg)
         return msg,""
     }
-    api_url,err_url := GetSubdomain()
+    api_url,err_url := GetApiUrl(test_path)
     if err_url !=nil {
         msg = "Error Getting Api Url: "+ fmt.Sprint(err_url)+":no_entry_sign:"
         fmt.Println(msg)
