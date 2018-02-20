@@ -66,9 +66,11 @@ func HubPush (test_path string) error {
     return nil 
 }
 func MergeBranch (branch string, test_path string) error {
-    cmd := exec.Command("hub","merge",branch)
+    branch_ori:=fmt.Sprintf("origin/%s",branch)
+    cmd := exec.Command("hub","merge",branch_ori)
     cmd.Dir = test_path
     _, err := cmd.Output()
+    fmt.Println(err)
     if err != nil {
          return err
         }
@@ -121,7 +123,7 @@ func WriteYAML (filepath string, objmap map[string]interface{}) error {
 }
 func NowApi(folder_path string) error {
     cmd:= exec.Command("now")
-    cmd.Dir = test_path
+    cmd.Dir = folder_path
      _, err := cmd.Output()
     if err != nil {
          return err
