@@ -31,7 +31,7 @@ func init() {
 func HandleServers (url string) (string,string){
     openapi,err := GetOpenApi(url)
     if err !=nil {
-        
+        return "",fmt.Sprintf("Error Getting OpenApi: %v",err)
     }
     servers,err_server:=GetServers(openapi)
     if err_server !=nil {
