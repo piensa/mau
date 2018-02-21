@@ -49,7 +49,7 @@ func ValidateHash (hash string) (bool, error,string){
         return false,errors.New(fmt.Sprintf("Error: %v",err_server)),""
     }
     staging_url:= servers["staging"]
-    remove_geosure:= strings.Replace(url, "https://geosure-", "", -1)
+    remove_geosure:= strings.Replace(staging_url, "https://geosure-", "", -1)
     hash_stage:=strings.Replace(remove_geosure, ".now.sh", "", -1)
     if hash_stage != hash {
         return false, nil, staging_url
@@ -95,7 +95,7 @@ func PublishUrl(hash string, test_path string,staging_url string,production_url 
         fmt.Println(msg)
         return msg
     }
-    obj_map:=ProductionOpenApi(test_path,production_url)
+    obj_map:=ProductionOpenApi(test_path,"https://"+production_url)
     err_yml:= WriteYAML (test_path+"/api/openapi.yaml", obj_map) 
     if err_yml !=nil {
         msg = "Error Saving openapi.yaml: "+ fmt.Sprint(err_yml)+":no_entry_sign:"
