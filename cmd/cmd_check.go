@@ -22,7 +22,7 @@ func init() {
             if err != nil {
                  log.Fatal(err)
             }
-            test_path = "/home/prometheus/test"
+            test_path = "/home/prometheus/geosure"
             var config ConfigStruct
             var url string
             var err_sub error 
