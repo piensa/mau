@@ -185,7 +185,7 @@ func AcceptPull(branch string, test_path string) (string,string) {
         return msg,""
     }
     err_push := HubPush(test_path)
-    if err_merge != nil {
+    if err_push != nil {
         msg = "Error HubPush: "+ fmt.Sprint(err_push)+ ":no_entry_sign:"
         fmt.Println(msg)
         return msg,""
@@ -218,7 +218,7 @@ func AcceptPull(branch string, test_path string) (string,string) {
         return msg,""
     }
     err_push = HubPush(test_path)
-    if err_merge != nil {
+    if err_push != nil {
         msg = "Error HubPush: "+ fmt.Sprint(err_push)+ ":no_entry_sign:"
         fmt.Println(msg)
         return msg,""
@@ -239,7 +239,7 @@ func AcceptPull(branch string, test_path string) (string,string) {
     }
     destination_url:= "api.geosure.tech"
     err_alias := NowAlias(path,api_url,destination_url)
-    if err_url !=nil {
+    if err_alias !=nil {
         msg = "Error Now Alias: "+ fmt.Sprint(err_alias)+":no_entry_sign:"
         fmt.Println(msg)
         return msg,""
