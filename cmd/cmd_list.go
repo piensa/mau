@@ -35,10 +35,10 @@ func init() {
 					commentBody, err := getCommentBody(GithubToken, pr[i].Links.Comments.Href)
 
 					if err == nil {
-						commentFull = ", *deployment url: *" + commentBody.DeploymentUrl
+						commentFull = ", *deployment url:* " + commentBody.DeploymentUrl
 					}
 
-					answer = answer + "`" + pr[i].Head.Ref + "` " + pr[i].Html_url + commentFull
+					answer = answer +"\n"+ "`" + pr[i].Head.Ref + "` " + pr[i].Html_url + commentFull
 				}
 			}
 			conv.Reply(answer)
@@ -78,7 +78,6 @@ type Comment struct {
 
 type ParsedComment struct {
 	DeploymentUrl	string
-	DeploymentDate	string
 	TestCoverage	string
 	TestPassed	string
 	TestTime	string
@@ -96,7 +95,6 @@ func getPrList(GithubToken string) []Prlist {
 
 	var pr []Prlist
 	json.Unmarshal(body, &pr)
-
 	return pr
 }
 
@@ -110,7 +108,6 @@ func getCommentBody(GithubToken string, commentUrl string) (ParsedComment, error
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-
 	var comment []Comment
 	json.Unmarshal(body, &comment)
 
@@ -134,11 +131,9 @@ func stringCommentParser(commentBody string) (ParsedComment, error) {
 	commentArray := strings.Split(commentBody, "\n")
 	parsedComment = ParsedComment{
 		DeploymentUrl:	strings.Split(commentArray[0], "=")[1],
-		DeploymentDate:	strings.Split(commentArray[1], "=")[1],
-		TestCoverage:	strings.Split(commentArray[2], "=")[1],
-		TestPassed:	strings.Split(commentArray[3], "=")[1],
-		TestTime:	strings.Split(commentArray[4], "=")[1] }
+		TestCoverage:	strings.Split(commentArray[1], "=")[1],
+		TestPassed:	strings.Split(commentArray[2], "=")[1],
+		TestTime:	strings.Split(commentArray[3], "=")[1] }
 
-	//fmt.Println(parsedComment.DeploymentUrl)
 	return parsedComment, nil
 }
